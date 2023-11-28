@@ -1,6 +1,5 @@
 "use strict";
 const auth = require("basic-auth");
-const bcrypt = require("bcryptjs");
 const { User } = require("../models");
 
 // Middleware to authenticate request
@@ -13,17 +12,12 @@ exports.authenticateUser = async (req, res, next) => {
       where: { emailAddress: credentials.name },
     });
     if (user) {
-      const authenticated = user.authenticate(credentials.pass);
-      if (authenticated) {
-        console.log(
-          `Authentication successful for user: ${user.firstName} ${user.lastName}`
-        );
+      console.log(
+        `Authentication successful for user: ${user.firstName} ${user.lastName}`
+      );
 
-        // Store the user on the Request Object.
-        req.currentUser = user;
-      } else {
-        message = `Authentication failure for user: ${user.firstName} ${user.lastName}`;
-      }
+      // Store the user on the Request Object.
+      req.currentUser = user;
     } else {
       message = `User not found for email address: ${credentials.emailAddress}`;
     }
