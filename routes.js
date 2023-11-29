@@ -8,6 +8,7 @@ const { authenticateUser } = require("./middleware/auth-user");
 // Construct router instance
 const router = express.Router();
 
+/** User Routes **/
 // Route that will return current authenticated user
 router.get(
   "/users",
@@ -30,6 +31,7 @@ router.post(
   asyncHandler(async (req, res) => {
     try {
       await User.create(req.body);
+
       // set location header
       res.location("/");
       // return 201 status code and no content
@@ -48,22 +50,41 @@ router.post(
   })
 );
 
-// Route that returns all users
-// router.get(
-//   "/users",
-//   asyncHandler(async (req, res) => {
-//     let users = await User.findAll();
-//     res.status(200).json(users);
-//   })
-// );
-
-// Route that returns all courses
+/** Courses Routes **/
+// Route that returns all courses and associated user
 router.get(
   "/courses",
   asyncHandler(async (req, res) => {
-    let courses = await Course.findAll();
+    let courses = await Course.findAll({
+      include: [
+        {
+          model: User,
+        },
+      ],
+    });
     res.status(200).json(courses);
   })
 );
+
+// Route that will return corresponding course
+router.get(
+  "/courses/:id",
+  asyncHandler(async (req, res) => {
+    const courseId = req.params.id;
+    const course = await Course.findOne({
+      where: { id: courseId },
+      include: {
+        model: User,
+      },
+    });
+    res.status(200).json(course);
+  })
+);
+
+// Route that will create a new course
+
+// Route that will update corresponding course
+
+// Route that will delete corresponding course
 
 module.exports = router;
