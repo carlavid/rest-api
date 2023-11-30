@@ -16,13 +16,16 @@ router.get(
   asyncHandler(async (req, res) => {
     const user = req.currentUser;
 
-    res.status(200).json({
-      id: user.id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      emailAddress: user.emailAddress,
+    res.status(200).json(
+      user
+      // {
+      // id: user.id,
+      // firstName: user.firstName,
+      // lastName: user.lastName,
+      // emailAddress: user.emailAddress,
       // password: user.password,
-    });
+      // }
+    );
   })
 );
 
@@ -32,7 +35,8 @@ router.post(
   asyncHandler(async (req, res) => {
     try {
       await User.create(req.body);
-
+      const { password } = req.body;
+      console.log(password);
       // set location header
       res.location("/");
       // return 201 status code and no content
@@ -86,14 +90,26 @@ router.get(
 router.post(
   "/courses",
   asyncHandler(async (req, res) => {
-    const courses = await Course.findAll();
-    const newCourse = req.body;
+    try {
+      const courses = await Course.findAll();
+      const newCourse = await Course.create(req.body);
 
-    newCourse.id = courses.length + 1;
-    courses.push(newCourse);
+      newCourse.id = courses.length + 1;
+      courses.push(newCourse);
 
-    res.location(`/courses/${newCourse.id}`);
-    res.status(201).end();
+      res.location(`api/courses/${newCourse.id}`);
+      res.status(201).end();
+    } catch (error) {
+      if (
+        error.name === "SequelizeValidationError" ||
+        error.name === "SequelizeUniqueConstraintError"
+      ) {
+        const errors = error.errors.map((err) => err.message);
+        res.status(400).json({ errors });
+      } else {
+        throw error;
+      }
+    }
   })
 );
 
@@ -101,12 +117,24 @@ router.post(
 router.put(
   "/courses/:id",
   asyncHandler(async (req, res) => {
-    const courseId = req.params.id;
-    const course = await Course.findOne({ where: { id: courseId } });
-    const updatedCourse = req.body;
+    try {
+      const courseId = req.params.id;
+      const course = await Course.findOne({ where: { id: courseId } });
+      const updatedCourse = req.body;
 
-    await course.update(updatedCourse);
-    res.status(204).end();
+      await course.update(updatedCourse);
+      res.status(204).end();
+    } catch (error) {
+      if (
+        error.name === "SequelizeValidationError" ||
+        error.name === "SequelizeUniqueConstraintError"
+      ) {
+        const errors = error.errors.map((err) => err.message);
+        res.status(400).json({ errors });
+      } else {
+        throw error;
+      }
+    }
   })
 );
 
