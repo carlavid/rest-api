@@ -17,10 +17,11 @@ router.get(
     const user = req.currentUser;
 
     res.status(200).json({
+      id: user.id,
       firstName: user.firstName,
       lastName: user.lastName,
       emailAddress: user.emailAddress,
-      password: user.password,
+      // password: user.password,
     });
   })
 );
@@ -82,9 +83,43 @@ router.get(
 );
 
 // Route that will create a new course
+router.post(
+  "/courses",
+  asyncHandler(async (req, res) => {
+    const courses = await Course.findAll();
+    const newCourse = req.body;
+
+    newCourse.id = courses.length + 1;
+    courses.push(newCourse);
+
+    res.location(`/courses/${newCourse.id}`);
+    res.status(201).end();
+  })
+);
 
 // Route that will update corresponding course
+router.put(
+  "/courses/:id",
+  asyncHandler(async (req, res) => {
+    const courseId = req.params.id;
+    const course = await Course.findOne({ where: { id: courseId } });
+    const updatedCourse = req.body;
+
+    await course.update(updatedCourse);
+    res.status(204).end();
+  })
+);
 
 // Route that will delete corresponding course
+router.delete(
+  "/courses/:id",
+  asyncHandler(async (req, res) => {
+    const courseId = req.params.id;
+    const course = await Course.findOne({ where: { id: courseId } });
+
+    await course.destroy();
+    res.status(204).end();
+  })
+);
 
 module.exports = router;
