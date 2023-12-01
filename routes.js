@@ -4,6 +4,7 @@ const express = require("express");
 const { asyncHandler } = require("./middleware/async-handler");
 const { User, Course } = require("./models");
 const { authenticateUser } = require("./middleware/auth-user");
+const bcrypt = require("bcryptjs");
 
 // Construct router instance
 const router = express.Router();
@@ -15,28 +16,21 @@ router.get(
   authenticateUser,
   asyncHandler(async (req, res) => {
     const user = req.currentUser;
+    const password = req.currentUser.password;
+    console.log(password);
 
-    res.status(200).json(
-      user
-      // {
-      // id: user.id,
-      // firstName: user.firstName,
-      // lastName: user.lastName,
-      // emailAddress: user.emailAddress,
-      // password: user.password,
-      // }
-    );
+    res.status(200).json(user);
   })
 );
 
 // Route that creates a new user
+// & hashes the user's password before persisting
+// user to the database
 router.post(
   "/users",
   asyncHandler(async (req, res) => {
     try {
       await User.create(req.body);
-      const { password } = req.body;
-      console.log(password);
       // set location header
       res.location("/");
       // return 201 status code and no content
@@ -89,6 +83,7 @@ router.get(
 // Route that will create a new course
 router.post(
   "/courses",
+  authenticateUser,
   asyncHandler(async (req, res) => {
     try {
       const courses = await Course.findAll();
@@ -116,6 +111,7 @@ router.post(
 // Route that will update corresponding course
 router.put(
   "/courses/:id",
+  authenticateUser,
   asyncHandler(async (req, res) => {
     try {
       const courseId = req.params.id;
@@ -141,6 +137,7 @@ router.put(
 // Route that will delete corresponding course
 router.delete(
   "/courses/:id",
+  authenticateUser,
   asyncHandler(async (req, res) => {
     const courseId = req.params.id;
     const course = await Course.findOne({ where: { id: courseId } });
