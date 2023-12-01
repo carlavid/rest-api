@@ -4,7 +4,6 @@ const express = require("express");
 const { asyncHandler } = require("./middleware/async-handler");
 const { User, Course } = require("./models");
 const { authenticateUser } = require("./middleware/auth-user");
-const bcrypt = require("bcryptjs");
 
 // Construct router instance
 const router = express.Router();
@@ -16,16 +15,17 @@ router.get(
   authenticateUser,
   asyncHandler(async (req, res) => {
     const user = req.currentUser;
-    const password = req.currentUser.password;
-    console.log(password);
 
-    res.status(200).json(user);
+    res.status(200).json({
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      emailAddress: user.emailAddress,
+    });
   })
 );
 
 // Route that creates a new user
-// & hashes the user's password before persisting
-// user to the database
 router.post(
   "/users",
   asyncHandler(async (req, res) => {
@@ -55,11 +55,11 @@ router.get(
   "/courses",
   asyncHandler(async (req, res) => {
     let courses = await Course.findAll({
-      include: [
-        {
-          model: User,
-        },
-      ],
+      include: {
+        model: User,
+        attributes: { exclude: ["createdAt", "updatedAt"] },
+      },
+      attributes: { exclude: ["createdAt", "updatedAt"] },
     });
     res.status(200).json(courses);
   })
@@ -74,7 +74,9 @@ router.get(
       where: { id: courseId },
       include: {
         model: User,
+        attributes: { exclude: ["createdAt", "updatedAt"] },
       },
+      attributes: { exclude: ["createdAt", "updatedAt"] },
     });
     res.status(200).json(course);
   })
@@ -118,8 +120,12 @@ router.put(
       const course = await Course.findOne({ where: { id: courseId } });
       const updatedCourse = req.body;
 
-      await course.update(updatedCourse);
-      res.status(204).end();
+      if (course.userId !== req.currentUser.id) {
+        res.status(403).end();
+      } else {
+        await course.update(updatedCourse);
+        res.status(204).end();
+      }
     } catch (error) {
       if (
         error.name === "SequelizeValidationError" ||
@@ -142,8 +148,12 @@ router.delete(
     const courseId = req.params.id;
     const course = await Course.findOne({ where: { id: courseId } });
 
-    await course.destroy();
-    res.status(204).end();
+    if (course.userId !== req.currentUser.id) {
+      res.status(403).end();
+    } else {
+      await course.destroy();
+      res.status(204).end();
+    }
   })
 );
 

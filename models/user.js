@@ -33,6 +33,7 @@ module.exports = (sequelize) => {
       emailAddress: {
         type: DataTypes.STRING,
         allowNull: false,
+        unique: true,
         validate: {
           notNull: {
             msg: "An email address is required",
@@ -40,21 +41,26 @@ module.exports = (sequelize) => {
           notEmpty: {
             msg: "Please provide an email address",
           },
+          isEmail: {
+            msg: "Please provide a valid email address",
+          },
         },
       },
       password: {
         type: DataTypes.STRING,
         allowNull: false,
-        set(value) {
-          const hashedPassword = bcrypt.hashSync(value, 10);
-          this.setDataValue("password", hashedPassword);
-        },
         validate: {
           notNull: {
             msg: "A password is required",
           },
           notEmpty: {
             msg: "Please provide a password",
+          },
+          set(value) {
+            if (value) {
+              const hashedPassword = bcrypt.hashSync(value, 10);
+              this.setDataValue("password", hashedPassword);
+            }
           },
         },
       },
