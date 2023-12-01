@@ -57,7 +57,7 @@ router.get(
     let courses = await Course.findAll({
       include: {
         model: User,
-        attributes: { exclude: ["createdAt", "updatedAt"] },
+        attributes: { exclude: ["password", "createdAt", "updatedAt"] },
       },
       attributes: { exclude: ["createdAt", "updatedAt"] },
     });
@@ -74,7 +74,7 @@ router.get(
       where: { id: courseId },
       include: {
         model: User,
-        attributes: { exclude: ["createdAt", "updatedAt"] },
+        attributes: { exclude: ["password", "createdAt", "updatedAt"] },
       },
       attributes: { exclude: ["createdAt", "updatedAt"] },
     });
